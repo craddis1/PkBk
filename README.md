@@ -1,11 +1,18 @@
 # PkBk
 
-Computes Power Spectrum and Bispectrum multipoles allowing for option of different Line-of-sights.
+Computes Power Spectrum and Bispectrum multipoles using FFTs allowing for option of different Line-of-sights (LOS).
 
-It is intended as a fast user-friendly code written in python with heavy use of numpy with ffts implemented in c with pyfftw and key bottlenecks optimised with Numba. Mulithreading is implented through pyfftw and Numba and is used in some areas.
+It can be used to quickly compute multipoles over many realisations with expansions for different LOS included as in ... . For the bispectrum several options are available but it can return values for the bisepctrum over the full range of traingles for a given k-range.
+
+
+It is intended as a fast user-friendly code written in python with heavy use of numpy, and so nothing is needed to be compiled! The FFTs are implemented in c with pyfftw and other key bottlenecks are optimised with Numba. Mulithreading is implented through pyfftw and Numba and is used in some key areas. Multiproccessing can then be added on the frontend.
+
 
 
 ## Installation
+
+git clone ....
+
 
 Requirements:
 - numpy
@@ -15,7 +22,7 @@ Requirements:
 - matplotlib (for frontend parts only)
 - multiprocessing (for frontend parts only)
 
-# Usage
+# Docuementation and getting started
 
 See pk_example.ipynb and bk_example.ipynb for a quick start but a bit more thorough documentation is available down below.
 
@@ -28,6 +35,8 @@ Contains functions which computes field information that only needs to be consid
 Key functions:
 
 ### compute_survey
+
+compute_survey(Nside,L,rfft=False,order=2,obs_pos=[0,0,0])
 
 Computes key survey variables:
 
@@ -55,12 +64,14 @@ Outputs:
 
 ### pk_compute_bins
 
+pk_compute_bins(k,s,k_mag,k_f)
+
 Computes binning scheme for the power spectrum and number of modes in each bin:
 
 ```
 s=1/2 # bin width in units of 2*k_f
 k_est = np.arange(grid_info[5],grid_info[6],2*s*grid_info[5]) + s*k_f #create k bins centers - from k_f to k_ny with steps of s*k_f
-binning_info = pk_compute_bins(k_est,grid_info[3],grid_info[5],s)
+binning_info = cgi.pk_compute_bins(k_est,grid_info[3],grid_info[5],s)
 In_bin,N_modes = binning_info
 ```
 Outputs:
@@ -75,12 +86,14 @@ bk_full_compute_bins(ks,N_side,s,k_mag,k_f,dtype=np.complex64,threads=1,rfft=Fal
 Computes binning scheme for the power spectrum and number of triangles in each bin via iFFTs:
 
 ```
-dtype    = np.complex64                  # dtype of fourier space array - either single of double precision
-s        = 1/2 #units of 2*k_f           # bin width in units of 2*k_f
-threads  = 6                             # Number of threads to use in FFTs
-ks       = np.arange(k_f,0.1,k_f)+ k_f/2 # k bins 
+ks       = np.arange(k_f,0.1,k_f)+ k_f/2  # k bins 
+N_side   = 128                            # resolution of the grid
+s        = 1/2 #units of 2*k_f            # bin width in units of 2*k_f
+dtype    = np.complex64                   # dtype of fourier space array - either single of double precision
+threads  = 6                              # Number of threads to use in FFTs
+rfft     = True                           # whether to compute using real-to-complex Fourier transforms
 
-binning_info = cgi.bk_full_compute_bins(ks,Nside,s,grid_info[3],grid_info[5],dtype,threads,rfft)
+binning_info = cgi.bk_full_compute_bins(ks,N_side,s,grid_info[3],grid_info[5],dtype,threads,rfft)
 In_bin,N_tri = binning_info
 ```
 Outputs:

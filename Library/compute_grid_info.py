@@ -108,12 +108,10 @@ def ifft_sum(field1: complex64[:, :], field2: complex64[:, :], field3: complex64
     N_bins= len(field1)
     Bk_lm = np.zeros((N_bins,N_bins,N_bins),dtype=np.complex64)
     for i in prange(N_bins):
-        for j in range(N_bins):       #we remove these constraints as it is not symmetric for l>0
-            #if i > 2*j:
-                #continue                              #these values should all be 0 anyway as dirac delta
+        for j in range(N_bins):
             for k in range(N_bins):
-                #if (i > j+k) or ((j > i+k)or (k > i+j)):
-                    #continue
+                if (i > j+k+2) or ((j > i+k+2)or (k > i+j+2)):#these values should all be 0  as dirac delta
+                    continue
                 sum_real = 0.0
                 sum_imag = 0.0
                 for idx in range(field1.shape[1]):

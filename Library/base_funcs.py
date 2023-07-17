@@ -61,3 +61,44 @@ def count_distinct_permutations(comb): #counts the distinct permuations (n1+n2+.
 #returns triangle numbers - which is how many terms there are for each multipole (or at least to whcih order)
 def Num_terms(l):
     return np.int((l+1)*(l+2)/2)
+
+#this reshapes (xi.f)^2 function to (xi.f)(xi.g) saving redundant compuation #only used beyond endpoint...
+def reshape69(arr,count_distinct=False):
+    arr_shape = arr.shape[2:]#get underlying shape
+    arr_new = np.zeros((arr.shape[0],9,*arr_shape),dtype=arr.dtype)
+
+    if count_distinct: #are the permutations added to this part or not?
+        #now get stuff
+        #[0,0]
+        arr_new[:,0]= arr[:,0]
+        #[0,1]
+        arr_new[:,1] = arr[:,1]
+        arr_new[:,3] = arr[:,1]
+        #[0,2]
+        arr_new[:,2] = arr[:,2]
+        arr_new[:,6] = arr[:,2]
+        #[1,1]
+        arr_new[:,4] = arr[:,3]
+        #[1,2]
+        arr_new[:,5] = arr[:,4]
+        arr_new[:,7] = arr[:,4]
+        #[2,2]
+        arr_new[:,8] = arr[:,5]
+    else:
+        #now get stuff
+        #[0,0]
+        arr_new[:,0]= arr[:,0]
+        #[0,1]
+        arr_new[:,1] = (1/2)*arr[:,1]
+        arr_new[:,3] = (1/2)*arr[:,1]
+        #[0,2]
+        arr_new[:,2] = (1/2)*arr[:,2]
+        arr_new[:,6] = (1/2)*arr[:,2]
+        #[1,1]
+        arr_new[:,4] = arr[:,3]
+        #[1,2]
+        arr_new[:,5] = (1/2)*arr[:,4]
+        arr_new[:,7] = (1/2)*arr[:,4]
+        #[2,2]
+        arr_new[:,8] = arr[:,5]
+    return arr_new

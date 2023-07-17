@@ -16,7 +16,6 @@ class Bk:
         xi,x_norm,ki,k_mag,MAS,k_f,k_ny = grid_info
         In_bin,Ntri = binning_info
         
-        
         N_bins = len(ks)
         #raise warning if bad dtype
         if dtype != np.complex128 and dtype != np.complex64:
@@ -122,46 +121,6 @@ class Bk:
 
             return F_1,F_2
         
-        def reshape69(arr,count_distinct=False):#this reshapes (xi.f)^2 function to (xi.f)(xi.g) saving redundant compuation
-            arr_shape = arr.shape[2:]#get underlying shape
-            arr_new = np.zeros((arr.shape[0],9,*arr_shape),dtype=dtype_r)
-            
-            if count_distinct: #are the permutations added to this part or not?
-                #now get stuff
-                #[0,0]
-                arr_new[:,0]= arr[:,0]
-                #[0,1]
-                arr_new[:,1] = arr[:,1]
-                arr_new[:,3] = arr[:,1]
-                #[0,2]
-                arr_new[:,2] = arr[:,2]
-                arr_new[:,6] = arr[:,2]
-                #[1,1]
-                arr_new[:,4] = arr[:,3]
-                #[1,2]
-                arr_new[:,5] = arr[:,4]
-                arr_new[:,7] = arr[:,4]
-                #[2,2]
-                arr_new[:,8] = arr[:,5]
-            else:
-                #now get stuff
-                #[0,0]
-                arr_new[:,0]= arr[:,0]
-                #[0,1]
-                arr_new[:,1] = (1/2)*arr[:,1]
-                arr_new[:,3] = (1/2)*arr[:,1]
-                #[0,2]
-                arr_new[:,2] = (1/2)*arr[:,2]
-                arr_new[:,6] = (1/2)*arr[:,2]
-                #[1,1]
-                arr_new[:,4] = arr[:,3]
-                #[1,2]
-                arr_new[:,5] = (1/2)*arr[:,4]
-                arr_new[:,7] = (1/2)*arr[:,4]
-                #[2,2]
-                arr_new[:,8] = arr[:,5]
-            return arr_new
-        
         # (k1.x_i)^l1 (x1.xi)^l2 #so new stuff needed for bispectrum - more like Qpqrs2
         # will returns probably 3,3
         #returns 2 arrays shape (Num_terms(l2),Num_terms(l1),N_side,N_side,N_side)
@@ -265,7 +224,7 @@ class Bk:
             if single_field:
                 ifft_F = np.zeros((N_bins,N_side**3),dtype=dtype_r) #create empty arrays for the iffts of each bins
                 for i in range(N_bins):#for each bin a new FFT box is created to get I(n,k) after being IFFTed
-                    ifft_F[i] = FFTW_ifft(np.where(In_bin[i],field*MAS,0))
+                    ifft_F[i] = FFTW_ifft(np.where(In_bin[i],field*MAS,0)).flatten()
             else:
                 ifft_F = np.zeros((N_bins,field.shape[0],N_side**3),dtype=dtype_r) #create empty arrays for the iffts of each bins
                 for i in range(N_bins):#for each bin a new FFT box is created to get I(n,k) after being IFFTed
@@ -277,12 +236,10 @@ class Bk:
         def ifft_sum(field1: complex64[:, :], field2: complex64[:, :], field3: complex64[:, :]) -> complex64[:, :, :]: # does sum over fields where there are possible closed triangles...      
             Bk_lm = np.zeros((N_bins,N_bins,N_bins),dtype=np.complex64)
             for i in prange(N_bins):
-                for j in range(N_bins):       #we remove these constraints as it is not symmetric for l>0
-                    #if i > 2*j:
-                        #continue                              #these values should all be 0 anyway as dirac delta
+                for j in range(N_bins):
                     for k in range(N_bins):
-                        #if (i > j+k) or ((j > i+k)or (k > i+j)):
-                            #continue
+                        if (i > j+k+2) or ((j > i+k+2)or (k > i+j+2)):#these values should all be 0  as dirac delta
+                            continue
                         sum_real = 0.0
                         sum_imag = 0.0
                         for idx in range(field1.shape[1]):
@@ -296,8 +253,10 @@ class Bk:
         def ifft_sum1(field1,field2,field3): # does sum over fields where there are possible closed triangles...      
             Bk_lm = np.zeros((N_bins,N_bins,N_bins),dtype=np.complex64)
             for i in prange(N_bins):
-                for j in prange(N_bins):# i+1 -> k1 >= k2       #we remove these constraints as it is not symmetric for l>0
-                    for k in prange(N_bins):#j+1 -> k2 >= k3              
+                for j in range(N_bins):# i+1 -> k1 >= k2
+                    for k in range(N_bins):#j+1 -> k2 >= k3
+                        if (i > j+k+2) or ((j > i+k+2)or (k > i+j+2)):#these values should all be 0 as dirac delta
+                            continue
                         sum_real = np.float32(0.0)
                         sum_imag = np.float32(0.0)
                         for m in range(field1.shape[1]):
@@ -311,8 +270,10 @@ class Bk:
         def ifft_sum2(field1,field2,field3): # does sum over fields where there are possible closed triangles...      
             Bk_lm = np.zeros((N_bins,N_bins,N_bins),dtype=np.complex64)
             for i in prange(N_bins):
-                for j in range(N_bins):# i+1 -> k1 >= k2       #we remove these constraints as it is not symmetric for l>0
-                    for k in range(N_bins):#j+1 -> k2 >= k3              
+                for j in range(N_bins):# i+1 -> k1 >= k2
+                    for k in range(N_bins):#j+1 -> k2 >= k3
+                        if (i > j+k+2) or ((j > i+k+2)or (k > i+j+2)):#these values should all be 0 as dirac delta
+                            continue
                         sum_real = np.float32(0.0)
                         sum_imag = np.float32(0.0)
                         for m in range(field1.shape[1]):
@@ -328,6 +289,8 @@ class Bk:
             for i in range(N_bins):
                 for j in range(N_bins):
                     for k in range(N_bins):
+                        if (i > j+k+2) or ((j > i+k+2)or (k > i+j+2)):#these values should all be 0 as dirac delta
+                            continue
                         sum_real = np.float32(0.0)
                         sum_imag = np.float32(0.0)
                         for m in range(field1.shape[1]):
@@ -344,6 +307,8 @@ class Bk:
             for i in range(N_bins):
                 for j in range(N_bins):
                     for k in range(N_bins):
+                        if (i > j+k+2) or ((j > i+k+2)or (k > i+j+2)):#these values should all be 0 as dirac delta
+                            continue
                         sum_real = np.float32(0.0)
                         sum_imag = np.float32(0.0)
                         for m in range(field1.shape[1]):
@@ -358,8 +323,10 @@ class Bk:
         def ifft_sumx2x3(field1,field2,field3): # does sum over fields where there are possible closed triangles...      
             Bk_lm = np.zeros((N_bins,N_bins,N_bins),dtype=np.complex64)
             for i in prange(N_bins):
-                for j in range(N_bins):# i+1 -> k1 >= k2       #we remove these constraints as it is not symmetric for l>0
-                    for k in range(N_bins):#j+1 -> k2 >= k3              
+                for j in range(N_bins):# i+1 -> k1 >= k2
+                    for k in range(N_bins):#j+1 -> k2 >= k3    
+                        if (i > j+k+2) or ((j > i+k+2)or (k > i+j+2)):#these values should all be 0 as dirac delta
+                            continue
                         sum_real = np.float32(0.0)
                         sum_imag = np.float32(0.0)
                         for m in range(field2.shape[1]):
@@ -368,7 +335,6 @@ class Bk:
                                 sum_imag = sum_imag + field1.real[i, idx] * field2.imag[j,m, idx] * field3.real[k,m, idx] + field1.imag[i, idx] * field2.real[j,m, idx] * field3.real[k,m, idx] + field1.real[i, idx] * field2.real[j,m, idx] * field3.imag[k,m, idx] - field1.imag[i, idx] * field2.imag[j,m, idx] * field3.imag[k,m, idx]
                         Bk_lm[i, j, k] = sum_real + 1j*sum_imag
             return Bk_lm
-        
         
         #non-endpoint LOS - all multipoles
         # bispecrum with theta binning and legendre polynomials decomposition
@@ -491,10 +457,10 @@ class Bk:
                         ifft_Q1k_x3 = ifft_field(F_1.reshape((F_1.shape[0]*F_1.shape[1],N_side**3)),False)#reshape into (9,grid.shape)  
                                                 
                         #for -r^2 x2 (x1.x2)
-                        Bk_lm1[7] = -r**2 *ifft_sum1(ifft_Q1k_x3,reshape69(ifft_Q2),ifft_F)
+                        Bk_lm1[7] = -r**2 *ifft_sum1(ifft_Q1k_x3,bf.reshape69(ifft_Q2),ifft_F)
                         
                         #for -s^2 x3 (x1.x3)  
-                        Bk_lm1[8] = -s**2 *ifft_sum2(ifft_Q1k_x3,ifft_F,reshape69(ifft_Q2))
+                        Bk_lm1[8] = -s**2 *ifft_sum2(ifft_Q1k_x3,ifft_F,bf.reshape69(ifft_Q2))
                         
                         #ok now for xi (xj.x1) parts----------------------------------------------
                         #for -r s x3(x1.x2)
@@ -521,7 +487,7 @@ class Bk:
                         #3rs (k.x1)(x2.x1)(x3.x1)
                         #ok so now we can reuse field1 from the x1 (x2.x1)^2 part but need to reshape...
                         #is true as permutations were added to the non x1 part
-                        ifft_GQQ_x5 = reshape69(ifft_G1Q2_x5,True).reshape((N_bins,3,3,N_side**3))
+                        ifft_GQQ_x5 = bf.reshape69(ifft_G1Q2_x5,True).reshape((N_bins,3,3,N_side**3))
                         
                         Bk_lm1[14] = 3*r*s *ifft_mixed_sum(ifft_GQQ_x5,ifft_Q1,ifft_Q1)
                             
