@@ -1,11 +1,15 @@
 # PkBk
 
-Computes Power Spectrum and Bispectrum multipoles and allows for different LOS
+Computes Power Spectrum and Bispectrum multipoles allowing for option of different Line-of-sights
+##Installation
 
 Requirements:
-NUMBA
-PYFFTW
+- numpy
+- scipy
+- NUMBA
+- pyfftw
 
+###Usage
 
 
  
