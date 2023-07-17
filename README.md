@@ -27,7 +27,7 @@ Contains functions which computes field information that only needs to be consid
 
 Key functions:
 
-***compute_survey***
+### compute_survey
 
 Computes key survey variables:
 
@@ -52,7 +52,7 @@ Outputs:
 - **k_f**: Fundamental Frequency of box
 - **k_ny**: Nyquist frequency of box
 
----
+
 ### pk_compute_bins
 
 Computes binning scheme for the power spectrum and number of modes in each bin:
@@ -88,11 +88,12 @@ Outputs:
 - **N_tri**: Number of triangles for each permutation of k1,k2,k3 bins
 
 
-## Power Spectrum
+## Pk.py
 
 - *delta*    The overdensity field in format of np.array((N_side, N_side, N_side), dtype=dtype_r)
 
 
+## Bk_full.py
 
 
 # Creative liscence
