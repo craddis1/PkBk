@@ -385,9 +385,9 @@ class Bk:
                         Bk_lm1[2] = ifft_sum2(ifft_kF,ifft_F,ifft_Q1_x)
                         
                         Bk_lm = Bk_lm1
-                        
-                    r,s = rs #unpack r and s    
+                           
                     if exorder == 1:
+                        r,s = rs #unpack r and s 
                         #this stuff is used in both r and s parts...
                         #for the - k. xi parts
                         kF_k, Q_ij = Qpqrs2(delta,FFTW_fft(delta/x_norm),xi,ki,1) #get field in k-space
@@ -415,6 +415,7 @@ class Bk:
                             
                     
                     if exorder == 2:#should be careful about bf.count... as we reuse stuff but should be ok as little is of second order...-but CHECK!!!
+                        r,s = rs #unpack r and s 
                         #this is going to be fucking long but here we go hope it is interesting!
                         #can't split r and s now...
                         
