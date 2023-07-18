@@ -13,7 +13,6 @@ It is intended as a fast user-friendly code written in python with heavy use of 
 
 git clone ....
 
-
 Requirements:
 - numpy
 - scipy
