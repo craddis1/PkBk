@@ -23,6 +23,9 @@ Requirements:
 
 # Documentation and getting started
 
+[View the documentation on Read the Docs](https://pkbk.readthedocs.io/en/latest/index.html)
+
+
 See pk_example.ipynb and bk_example.ipynb for a quick start but a bit more thorough documentation is available down below.
 
 Some extra information is avaliable in interpolating a box to get a over-density field.
