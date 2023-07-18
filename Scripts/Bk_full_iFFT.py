@@ -2,9 +2,8 @@ import numpy as np
 #from time import time # maybe add computation time feature
 from itertools import combinations_with_replacement
 from numba import jit, complex64, complex128,prange
-
-import sys
-sys.path.append('/home/addis/Library')
+#import sys
+#sys.path.append('../Library')
 import base_funcs as bf
 
 
