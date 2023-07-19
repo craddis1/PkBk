@@ -125,6 +125,26 @@ class Pk:
                     F_2[i] += perms1*perms2*k_prod*FFTW_fft(delta*x_prod*x_prod2) 
                     
             return F_1,F_2
+        # equivalent of power_bin = const*np.sum(power_k[np.newaxis, ...] * In_bin, axis=(1,2,3))/N_modes
+        def sum_loop(Pk_lm,F_1,F_2,composite=False):
+            """Does sum loop over two fileds"""
+            power_k = F_1*np.conj(F_2)#is conjugate as F(-k) = F*(k)
+            
+            if composite != True:
+                for j in range(len(In_bin)):
+                    power_bin = np.sum(power_k[In_bin[j]])
+                    Pk_lm[j] += const*power_bin/N_modes[j]
+                    
+            else:
+                for i in range(3):
+                    for j in range(len(k_)):
+                        power_bin = -t*np.sum(power_k[i][In_bin[j]])
+                        Pk_lm[j] += const*power_bin/N_modes[j]
+
+            
+            return Pk_lm[j]
+        
+        
 
         #calculates Pk using a direct estimator method 
         def Pk_main(delta,k_,l):
