@@ -1,29 +1,4 @@
-# peturbative expansion fro LOS
-
-""" Up to date 11/10/2022 -
-class
-Pk(delta,L,Nside,l,k,grid_info,binning_info,t=0,iFFT=False,dtype=np.complex128,threads=1,real=False,verbose=True)
-
-delta                 #field
-L                     # boxsize
-Nside                 # grid resolution
-k                     #k values to create bins at
-grid_info             # output from grid_info func which contains information on the grid
-binning_info          # output from binning_info func which contains information on the bins
-t                     #as in Eq.
-iFFT                  # use inverse fourier transforms to integral rather than simple sum - just keep it false!
-dtype                 # single precision should be find and make it ~2x faster
-real                  # use real-to-complex FFTs do cut down our k-space grid by half - save memory and fine for real power spectrum but not for odd l
-verbose               # just print some extra info
-
-Functions to call:
-
-Endpoint: Pk = direct_PS(delta,k_,l)
-
-Pk_main(delta,k_,l)
-
-Plus iFFT versions - which just take longer but could be useful for checking things
-"""
+# peturbative expansion for LOS
 import numpy as np
 #from time import time # maybe add computation time feature
 from itertools import combinations_with_replacement
