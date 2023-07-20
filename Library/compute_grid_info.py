@@ -110,7 +110,7 @@ def ifft_sum(field1: complex64[:, :], field2: complex64[:, :], field3: complex64
     for i in prange(N_bins):
         for j in range(N_bins):
             for k in range(N_bins):
-                if (i > j+k+2) or ((j > i+k+2)or (k > i+j+2)):#these values should all be 0  as dirac delta
+                if (i > j+k+1) or ((j > i+k+1)or (k > i+j+1)):#these values should all be 0  as dirac delta
                     continue
                 sum_real = 0.0
                 sum_imag = 0.0

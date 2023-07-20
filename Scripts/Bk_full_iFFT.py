@@ -237,7 +237,7 @@ class Bk:
             for i in prange(N_bins):
                 for j in range(N_bins):
                     for k in range(N_bins):
-                        if (i > j+k+2) or ((j > i+k+2)or (k > i+j+2)):#these values should all be 0  as dirac delta
+                        if (i > j+k+1) or ((j > i+k+1)or (k > i+j+1)):#these values should all be 0  as dirac delta
                             continue
                         sum_real = 0.0
                         sum_imag = 0.0
@@ -254,7 +254,7 @@ class Bk:
             for i in prange(N_bins):
                 for j in range(N_bins):# i+1 -> k1 >= k2
                     for k in range(N_bins):#j+1 -> k2 >= k3
-                        if (i > j+k+2) or ((j > i+k+2)or (k > i+j+2)):#these values should all be 0 as dirac delta
+                        if (i > j+k+1) or ((j > i+k+1)or (k > i+j+1)):#these values should all be 0 as dirac delta
                             continue
                         sum_real = np.float32(0.0)
                         sum_imag = np.float32(0.0)
@@ -271,7 +271,7 @@ class Bk:
             for i in prange(N_bins):
                 for j in range(N_bins):# i+1 -> k1 >= k2
                     for k in range(N_bins):#j+1 -> k2 >= k3
-                        if (i > j+k+2) or ((j > i+k+2)or (k > i+j+2)):#these values should all be 0 as dirac delta
+                        if (i > j+k+1) or ((j > i+k+1)or (k > i+j+1)):#these values should all be 0 as dirac delta
                             continue
                         sum_real = np.float32(0.0)
                         sum_imag = np.float32(0.0)
@@ -288,7 +288,7 @@ class Bk:
             for i in range(N_bins):
                 for j in range(N_bins):
                     for k in range(N_bins):
-                        if (i > j+k+2) or ((j > i+k+2)or (k > i+j+2)):#these values should all be 0 as dirac delta
+                        if (i > j+k+1) or ((j > i+k+1)or (k > i+j+1)):#these values should all be 0 as dirac delta
                             continue
                         sum_real = np.float32(0.0)
                         sum_imag = np.float32(0.0)
@@ -306,8 +306,8 @@ class Bk:
             for i in range(N_bins):
                 for j in range(N_bins):
                     for k in range(N_bins):
-                        if (i > j+k+2) or ((j > i+k+2)or (k > i+j+2)):#these values should all be 0 as dirac delta
-                            continue
+                        if (i > j+k+1) or ((j > i+k+1)or (k > i+j+1)):#these values should all be 0 as dirac delta
+                            continu1
                         sum_real = np.float32(0.0)
                         sum_imag = np.float32(0.0)
                         for m in range(field1.shape[1]):
@@ -324,7 +324,7 @@ class Bk:
             for i in prange(N_bins):
                 for j in range(N_bins):# i+1 -> k1 >= k2
                     for k in range(N_bins):#j+1 -> k2 >= k3    
-                        if (i > j+k+2) or ((j > i+k+2)or (k > i+j+2)):#these values should all be 0 as dirac delta
+                        if (i > j+k+1) or ((j > i+k+1)or (k > i+j+1)):#these values should all be 0 as dirac delta
                             continue
                         sum_real = np.float32(0.0)
                         sum_imag = np.float32(0.0)

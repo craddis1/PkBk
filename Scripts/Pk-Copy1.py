@@ -128,7 +128,7 @@ class Pk:
         # equivalent of power_bin = const*np.sum(power_k[np.newaxis, ...] * In_bin, axis=(1,2,3))/N_modes
         def sum_loop(Pk_lm,F_1,F_2,composite=False):
             """Does sum loop over two fileds"""
-            power_k = F_1*MAS*np.conj(F_2*MAS)#is conjugate as F(-k) = F*(k)
+            power_k = F_1*np.conj(F_2)#is conjugate as F(-k) = F*(k)
             
             if composite != True:
                 for j in range(len(In_bin)):
@@ -166,97 +166,164 @@ class Pk:
 
                 if l==1:
                     #get the two fields Q_m and Q_n etc - for second field k2 = -k1 which we are expanding around    
-                    F_1 = Qpqrs(delta/x_norm,xi,ki,1)
-                    F_2 = FFTW_fft(delta)  #(-1)**(f123[1]) is there as we have negative k for second field
+                    F_1 = Qpqrs(delta/x_norm,xi,ki,1)*MAS
+                    F_2 = FFTW_fft(delta)*MAS  #(-1)**(f123[1]) is there as we have negative k for second field
 
-                    Pk_lm = sum_loop(Pk_lm,F_1,F_2)
-
+                    power_k = F_1*np.conj(F_2)#is conjugate as F(-k) = F*(k)
+                    #power_bin = np.sum(power_k[np.newaxis, ...] * In_bin, axis=(1,2,3))
+                    for j in range(len(k_)):
+                        power_bin = np.sum(power_k[In_bin[j]])
+                        Pk_lm[j] += const*power_bin/N_modes[j]
+                    
+                    
                     if t > 0:
                         if ex_order ==1:
                             #t k.x2/x1
-                            F_1 = FFTW_fft(delta/x_norm)#Qpqrs(delta,norm,ki,1)
-                            F_2 = Qpqrs(delta,xi,ki,1)#so this has the k term...
-                            Pk_lm = t*sum_loop(Pk_lm,F_1,F_2)
-                            
+                            F_1 = FFTW_fft(delta/x_norm)*MAS#Qpqrs(delta,norm,ki,1)
+                            F_2 = Qpqrs(delta,xi,ki,1)*MAS#so this has the k term...
+                            power_k = F_1*np.conj(F_2)#is conjugate as F(-k) = F*(k)
+                            #power_bin = np.sum(power_k[np.newaxis, ...] * In_bin, axis=(1,2,3))
+                            for j in range(len(k_)):
+                                power_bin = t*np.sum(power_k[In_bin[j]])
+                                Pk_lm[j] += const*power_bin/N_modes[j]
+
                             #ok so -t(k1.x1)(x1.x2) #so there are 9 terms -(first 3 are collasped down)...
                             F_1,F_2 = Fields_func(delta,ki,xi,x_norm,1,1)
-                            Pk_lm = -t*sum_loop(Pk_lm,F_1,F_2,True)#ok F_1 and F_2 have shape (3,(field))
+                            power_k = F_1*MAS*np.conj(F_2*MAS)#is conjugate as F(-k) = F*(k)
+                            #ok F_1 and F_2 have shape (3,(field))  #power_bin = np.sum(power_k[np.newaxis, ...] * In_bin, axis=(1,2,3))
+                            for i in range(3):
+                                for j in range(len(k_)):
+                                    power_bin = -t*np.sum(power_k[i][In_bin[j]])
+                                    Pk_lm[j] += const*power_bin/N_modes[j]
 
                         else:
                             #lets go to second order...
                             #only thing that changes for 1st few terms is (t**2+t)
                             #(t^2+t) k.x2/x1
-                            F_1 = FFTW_fft(delta/x_norm)#Qpqrs(delta,norm,ki,1)
-                            F_2 = Qpqrs(delta,xi,ki,1)#so this has the k term...
-                            Pk_lm = (t**2+t)*sum_loop(Pk_lm,F_1,F_2)
-                            
-                            
+                            F_1 = FFTW_fft(delta/x_norm)*MAS#Qpqrs(delta,norm,ki,1)
+                            F_2 = Qpqrs(delta,xi,ki,1)*MAS#so this has the k term...
+                            power_k = F_1*np.conj(F_2)#is conjugate as F(-k) = F*(k)
+                            for j in range(len(k_)):
+                                power_bin = (t**2+t)*np.sum(power_k[In_bin[j]])
+                                Pk_lm[j] += const*power_bin/N_modes[j]
+                                
                             #ok so -(t^2+t)(k1.x1)(x1.x2) #so there are 9 terms -(first 3 are collasped down)...
                             F_1,F_2 = Fields_func(delta,ki,xi,x_norm,1,1)
-                            Pk_lm = -(t**2+t)*sum_loop(Pk_lm,F_1,F_2,True)#ok F_1 and F_2 have shape (3,(field))
-                             
+                            power_k = F_1*MAS*np.conj(F_2*MAS)#is conjugate as F(-k) = F*(k)
+                            #ok F_1 and F_2 have shape (3,(field))
+                            for i in range(3):
+                                for j in range(len(k_)):
+                                    power_bin = -(t**2+t)*np.sum(power_k[i][In_bin[j]])
+                                    Pk_lm[j] += const*power_bin/N_modes[j]
                             
                             #-(t^2)(k1.x2)(x1.x2)
                             F_2,F_1 = Fields_func(delta,ki,xi,x_norm,1,1,2) # when field =2 then F_2 and F_1 switch
-                            Pk_lm = -(t**2)*sum_loop(Pk_lm,F_1,F_2,True)#ok F_1 and F_2 have shape (3,(field)) 
-                            
+                            power_k = F_1*MAS*np.conj(F_2*MAS)#is conjugate as F(-k) = F*(k)
+                            #ok F_1 and F_2 have shape (3,(field))
+                            for i in range(3):
+                                for j in range(len(k_)):
+                                    power_bin = -(t**2)*np.sum(power_k[i][In_bin[j]])
+                                    Pk_lm[j] += const*power_bin/N_modes[j]
                                     
                             #3/2 (t^2)(k1.x1)(x1.x2)^2
                             F_1,F_2 = Fields_func(delta,ki,xi,x_norm,1,2)
-                            Pk_lm = (3/2) *(t^2)*sum_loop(Pk_lm,F_1,F_2,True)#ok F_1 and F_2 have shape (6,(field))
+                            power_k = F_1*MAS*np.conj(F_2*MAS)#is conjugate as F(-k) = F*(k)
+                            #ok F_1 and F_2 have shape (6,(field))
+                            for i in range(6):
+                                for j in range(len(k_)):
+                                    power_bin = (3/2)*(t**2)*np.sum(power_k[i][In_bin[j]])
+                                    Pk_lm[j] += const*power_bin/N_modes[j]
                                             
                             #-1/2 (t^2)(k1.x1)(x2.x2)
-                            F_1 = Qpqrs(delta,xi/x_norm**3,ki,1)#so this has the k term...
-                            F_2 = FFTW_fft(delta*x_norm**2)
-                            Pk_lm = -(1/2) *(t**2)*sum_loop(Pk_lm,F_1,F_2)
+                            F_1 = Qpqrs(delta,xi/x_norm**3,ki,1)*MAS#so this has the k term...
+                            F_2 = FFTW_fft(delta*x_norm**2)*MAS
+                            power_k = F_1*np.conj(F_2)#is conjugate as F(-k) = F*(k)
+                            for j in range(len(k_)):
+                                power_bin = -(1/2)*(t**2)*np.sum(power_k[In_bin[j]])
+                                Pk_lm[j] += const*power_bin/N_modes[j]
                                           
                 if l==2:
                     #get the two fields Q_m and Q_n etc - for second field k2 = -k1 which we are expanding around    
-                    F_1 = Qpqrs(delta/(x_norm**2),xi,ki,2)
-                    F_2 = FFTW_fft(delta)  
-                    Pk_lm = sum_loop(Pk_lm,F_1,F_2)
+                    F_1 = Qpqrs(delta/(x_norm**2),xi,ki,2)*MAS
+                    F_2 = FFTW_fft(delta)*MAS  #(-1)**(f123[1]) is there as we have negative k for second field
+                    power_k = F_1*np.conj(F_2)#is conjugate as F(-k) = F*(k)
+                    for j in range(len(k_)):
+                        power_bin = np.sum(power_k[In_bin[j]])
+                        Pk_lm[j] += const*power_bin/N_modes[j]
                         
                     if t > 0:
                         if ex_order ==1:
                             #2t (k.x1)(k.x2)/x1
-                            F_1 = Qpqrs(delta/(x_norm**2),xi,ki,1)
-                            F_2 = Qpqrs(delta,xi,ki,1)
-                            Pk_lm = 2*t*sum_loop(Pk_lm,F_1,F_2)
+                            F_1 = Qpqrs(delta/(x_norm**2),xi,ki,1)*MAS
+                            F_2 = Qpqrs(delta,xi,ki,1)*MAS
+                            power_k = F_1*np.conj(F_2)#is conjugate as F(-k) = F*(k)
+                            for j in range(len(k_)):
+                                power_bin = 2*t*np.sum(power_k[In_bin[j]])
+                                Pk_lm[j] += const*power_bin/N_modes[j]
 
                             #-2t(k.x1)^2 (x1.x2)/x2
                             F_1,F_2 = Fields_func(delta,ki,xi,x_norm,2,1)
-                            Pk_lm = -2*t*sum_loop(Pk_lm,F_1,F_2,True)
+                            power_k = F_1*MAS*np.conj(F_2*MAS)#is conjugate as F(-k) = F*(k)
+                            #ok F_1 and F_2 have shape (3,(field))  #power_bin = np.sum(power_k[np.newaxis, ...] * In_bin, axis=(1,2,3))
+                            for i in range(3):
+                                for j in range(len(k_)):
+                                    power_bin = -2*t*np.sum(power_k[i][In_bin[j]])
+                                    Pk_lm[j] += const*power_bin/N_modes[j]
                                     
                         elif ex_order == 2:
                             
                             #lets go to second order...
                             #2(t^2+t) (k.x1)(k.x2)/x1
-                            F_1 = Qpqrs(delta/x_norm**2,xi,ki,1)
-                            F_2 = Qpqrs(delta,xi,ki,1)
-                            Pk_lm = 2*(t**2+t)*sum_loop(Pk_lm,F_1,F_2)
+                            F_1 = Qpqrs(delta/x_norm**2,xi,ki,1)*MAS
+                            F_2 = Qpqrs(delta,xi,ki,1)*MAS
+                            power_k = F_1*np.conj(F_2)#is conjugate as F(-k) = F*(k)
+                            for j in range(len(k_)):
+                                power_bin = 2*(t**2+t)*np.sum(power_k[In_bin[j]])
+                                Pk_lm[j] += const*power_bin/N_modes[j]
 
                             #-2(t^2+t)(k.x1)^2 (x1.x2)/x2
                             F_1,F_2 = Fields_func(delta,ki,xi,x_norm,2,1)
-                            Pk_lm = -2*(t**2+t)*sum_loop(Pk_lm,F_1,F_2,True)
+                            power_k = F_1*MAS*np.conj(F_2*MAS)#is conjugate as F(-k) = F*(k)
+                            #ok F_1 and F_2 have shape (3,(field))
+                            for i in range(3):
+                                for j in range(len(k_)):
+                                    power_bin = -2*(t**2+t)*np.sum(power_k[i][In_bin[j]])
+                                    Pk_lm[j] += const*power_bin/N_modes[j]
 
                             #t^2 (k.x2)^2
-                            F_1 = FFTW_fft(delta/x_norm**2)  
-                            F_2 = Qpqrs(delta,xi,ki,2)
-                            Pk_lm = sum_loop(Pk_lm,F_1,F_2)
+                            F_1 = FFTW_fft(delta/x_norm**2)*MAS  
+                            F_2 = Qpqrs(delta,xi,ki,2)*MAS
+                            power_k = F_1*np.conj(F_2)#is conjugate as F(-k) = F*(k)
+                            for j in range(len(k_)):
+                                power_bin = t**2 *np.sum(power_k[In_bin[j]])
+                                Pk_lm[j] += const*power_bin/N_modes[j]
 
                             #-4 t^2 (k.x1)(k.x2)(x1.x2)    
                             F_1,F_2 = Fields_func2(delta,ki,xi,x_norm,1,1)
-                            Pk_lm = sum_loop(Pk_lm,F_1,F_2,True)
+                            power_k = F_1*MAS*np.conj(F_2*MAS)#is conjugate as F(-k) = F*(k)
+                            #ok F_1 and F_2 have shape (3,(field))  #power_bin = np.sum(power_k[np.newaxis, ...] * In_bin, axis=(1,2,3))
+                            for i in range(3):
+                                for j in range(len(k_)):
+                                    power_bin = -4*(t**2)*np.sum(power_k[i][In_bin[j]])
+                                    Pk_lm[j] += const*power_bin/N_modes[j]
 
                             #4 (t^2) (k.x1)^2 (x1.x2)^2
                             l1=2;l2=2
                             F_1,F_2 = Fields_func(delta,ki,xi,x_norm,l1,l2)
-                            Pk_lm = sum_loop(Pk_lm,F_1,F_2,True)
+                            power_k = F_1*MAS*np.conj(F_2*MAS)#is conjugate as F(-k) = F*(k)
+                            #ok F_1 and F_2 have shape (3,(field))  
+                            for i in range(int((l2+1)*(l2+2)/2)):
+                                for j in range(len(k_)):
+                                    power_bin = 4*(t**2)*np.sum(power_k[i][In_bin[j]])
+                                    Pk_lm[j] += const*power_bin/N_modes[j]
 
                             #-(t^2)(k1.x1)^2 (x2.x2)
-                            F_1 = Qpqrs(delta/x_norm**4,xi,ki,2)#so this has the k term...
-                            F_2 = FFTW_fft(delta*x_norm**2)
-                            Pk_lm = sum_loop(Pk_lm,F_1,F_2)
+                            F_1 = Qpqrs(delta/x_norm**4,xi,ki,2)*MAS#so this has the k term...
+                            F_2 = FFTW_fft(delta*x_norm**2)*MAS
+                            power_k = F_1*np.conj(F_2)#is conjugate as F(-k) = F*(k)
+                            for j in range(len(k_)):
+                                power_bin = -(t**2)*np.sum(power_k[In_bin[j]])
+                                Pk_lm[j] += const*power_bin/N_modes[j]
                           
                 return Pk_lm
 
