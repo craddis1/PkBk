@@ -15,7 +15,12 @@ class Pk:
         #unpack variables from grid info and binning info...
         xi,x_norm,ki,k_mag,MAS,k_f,k_ny = grid_info
         In_bin,N_modes = binning_info
-        #xi = xi/x_norm
+        
+        Npix = Nside**3
+        V = L**3
+        H = V/Npix
+        const = (H**2)/V
+        
         #raise warning if bad dtype
         if dtype != np.complex128 and dtype != np.complex64:
             raise Exception("Invalid dtype")
@@ -125,25 +130,25 @@ class Pk:
                     F_2[i] += perms1*perms2*k_prod*FFTW_fft(delta*x_prod*x_prod2) 
                     
             return F_1,F_2
+        
         # equivalent of power_bin = const*np.sum(power_k[np.newaxis, ...] * In_bin, axis=(1,2,3))/N_modes
-        def sum_loop(Pk_lm,F_1,F_2,composite=False):
-            """Does sum loop over two fileds"""
+        def sum_loop(F_1,F_2,composite=False):
+            """Does sum loop over two fields - if composite = True then it does extra loop over them fields"""
             power_k = F_1*MAS*np.conj(F_2*MAS)#is conjugate as F(-k) = F*(k)
-            
+            Pk_lm_empty = np.zeros(len(In_bin),dtype=dtype)
             if composite != True:
                 for j in range(len(In_bin)):
                     power_bin = np.sum(power_k[In_bin[j]])
-                    Pk_lm[j] += const*power_bin/N_modes[j]
+                    Pk_lm_empty[j] += const*power_bin/N_modes[j]
                     
             else:
                 for i in range(len(F_1)):
-                    for j in range(len(k_)):
-                        power_bin = -t*np.sum(power_k[i][In_bin[j]])
-                        Pk_lm[j] += const*power_bin/N_modes[j]
+                    for j in range(len(In_bin)):
+                        power_bin = np.sum(power_k[i][In_bin[j]])
+                        Pk_lm_empty[j] += const*power_bin/N_modes[j]
             
-            return Pk_lm[j]
-        
-        
+            return Pk_lm_empty
+
 
         #calculates Pk using a direct estimator method 
         def Pk_main(delta,k_,l):
@@ -151,16 +156,10 @@ class Pk:
             FFT_number = 0
 
             delta_k = FFTW_fft(delta) #no longer in get values
-            Npix = Nside**3
-            V = L**3
-            H = V/Npix
-            const = (H**2)/V
             
             Nbins = len(k_)
-            Pk_lm = np.zeros(Nbins,dtype=dtype)
 
             def main_func(l):
-                Pk_lm = np.zeros(Nbins,dtype=dtype)
                 if l == 0:
                     return Pk_mono
 
@@ -168,64 +167,63 @@ class Pk:
                     #get the two fields Q_m and Q_n etc - for second field k2 = -k1 which we are expanding around    
                     F_1 = Qpqrs(delta/x_norm,xi,ki,1)
                     F_2 = FFTW_fft(delta)  #(-1)**(f123[1]) is there as we have negative k for second field
-
-                    Pk_lm = sum_loop(Pk_lm,F_1,F_2)
-
+                    Pk_lm = sum_loop(F_1,F_2)
+                    
                     if t > 0:
                         if ex_order ==1:
                             #t k.x2/x1
                             F_1 = FFTW_fft(delta/x_norm)#Qpqrs(delta,norm,ki,1)
                             F_2 = Qpqrs(delta,xi,ki,1)#so this has the k term...
-                            Pk_lm = t*sum_loop(Pk_lm,F_1,F_2)
+                            Pk_lm += t*sum_loop(F_1,F_2)
                             
                             #ok so -t(k1.x1)(x1.x2) #so there are 9 terms -(first 3 are collasped down)...
                             F_1,F_2 = Fields_func(delta,ki,xi,x_norm,1,1)
-                            Pk_lm = -t*sum_loop(Pk_lm,F_1,F_2,True)#ok F_1 and F_2 have shape (3,(field))
+                            Pk_lm += -t*sum_loop(F_1,F_2,True)#ok F_1 and F_2 have shape (3,(field))
 
-                        else:
+                        elif ex_order == 2:
                             #lets go to second order...
                             #only thing that changes for 1st few terms is (t**2+t)
                             #(t^2+t) k.x2/x1
                             F_1 = FFTW_fft(delta/x_norm)#Qpqrs(delta,norm,ki,1)
                             F_2 = Qpqrs(delta,xi,ki,1)#so this has the k term...
-                            Pk_lm = (t**2+t)*sum_loop(Pk_lm,F_1,F_2)
+                            Pk_lm += (t**2+t)*sum_loop(F_1,F_2)
                             
                             
                             #ok so -(t^2+t)(k1.x1)(x1.x2) #so there are 9 terms -(first 3 are collasped down)...
                             F_1,F_2 = Fields_func(delta,ki,xi,x_norm,1,1)
-                            Pk_lm = -(t**2+t)*sum_loop(Pk_lm,F_1,F_2,True)#ok F_1 and F_2 have shape (3,(field))
+                            Pk_lm += -(t**2+t)*sum_loop(F_1,F_2,True)#ok F_1 and F_2 have shape (3,(field))
                              
                             
                             #-(t^2)(k1.x2)(x1.x2)
                             F_2,F_1 = Fields_func(delta,ki,xi,x_norm,1,1,2) # when field =2 then F_2 and F_1 switch
-                            Pk_lm = -(t**2)*sum_loop(Pk_lm,F_1,F_2,True)#ok F_1 and F_2 have shape (3,(field)) 
+                            Pk_lm += -(t**2)*sum_loop(F_1,F_2,True)#ok F_1 and F_2 have shape (3,(field)) 
                             
                                     
                             #3/2 (t^2)(k1.x1)(x1.x2)^2
                             F_1,F_2 = Fields_func(delta,ki,xi,x_norm,1,2)
-                            Pk_lm = (3/2) *(t^2)*sum_loop(Pk_lm,F_1,F_2,True)#ok F_1 and F_2 have shape (6,(field))
+                            Pk_lm += (3/2) *(t**2)*sum_loop(F_1,F_2,True)#ok F_1 and F_2 have shape (6,(field))
                                             
                             #-1/2 (t^2)(k1.x1)(x2.x2)
                             F_1 = Qpqrs(delta,xi/x_norm**3,ki,1)#so this has the k term...
                             F_2 = FFTW_fft(delta*x_norm**2)
-                            Pk_lm = -(1/2) *(t**2)*sum_loop(Pk_lm,F_1,F_2)
+                            Pk_lm += -(1/2) *(t**2)*sum_loop(F_1,F_2)
                                           
                 if l==2:
                     #get the two fields Q_m and Q_n etc - for second field k2 = -k1 which we are expanding around    
                     F_1 = Qpqrs(delta/(x_norm**2),xi,ki,2)
                     F_2 = FFTW_fft(delta)  
-                    Pk_lm = sum_loop(Pk_lm,F_1,F_2)
+                    Pk_lm = sum_loop(F_1,F_2)
                         
                     if t > 0:
                         if ex_order ==1:
                             #2t (k.x1)(k.x2)/x1
                             F_1 = Qpqrs(delta/(x_norm**2),xi,ki,1)
                             F_2 = Qpqrs(delta,xi,ki,1)
-                            Pk_lm = 2*t*sum_loop(Pk_lm,F_1,F_2)
+                            Pk_lm += 2*t*sum_loop(F_1,F_2)
 
                             #-2t(k.x1)^2 (x1.x2)/x2
                             F_1,F_2 = Fields_func(delta,ki,xi,x_norm,2,1)
-                            Pk_lm = -2*t*sum_loop(Pk_lm,F_1,F_2,True)
+                            Pk_lm += -2*t*sum_loop(F_1,F_2,True)
                                     
                         elif ex_order == 2:
                             
@@ -233,30 +231,30 @@ class Pk:
                             #2(t^2+t) (k.x1)(k.x2)/x1
                             F_1 = Qpqrs(delta/x_norm**2,xi,ki,1)
                             F_2 = Qpqrs(delta,xi,ki,1)
-                            Pk_lm = 2*(t**2+t)*sum_loop(Pk_lm,F_1,F_2)
+                            Pk_lm += 2*(t**2+t)*sum_loop(F_1,F_2)
 
                             #-2(t^2+t)(k.x1)^2 (x1.x2)/x2
                             F_1,F_2 = Fields_func(delta,ki,xi,x_norm,2,1)
-                            Pk_lm = -2*(t**2+t)*sum_loop(Pk_lm,F_1,F_2,True)
+                            Pk_lm += -2*(t**2+t)*sum_loop(F_1,F_2,True)
 
                             #t^2 (k.x2)^2
                             F_1 = FFTW_fft(delta/x_norm**2)  
                             F_2 = Qpqrs(delta,xi,ki,2)
-                            Pk_lm = sum_loop(Pk_lm,F_1,F_2)
+                            Pk_lm += t**2 *sum_loop(F_1,F_2)
 
                             #-4 t^2 (k.x1)(k.x2)(x1.x2)    
                             F_1,F_2 = Fields_func2(delta,ki,xi,x_norm,1,1)
-                            Pk_lm = sum_loop(Pk_lm,F_1,F_2,True)
+                            Pk_lm += -4*t**2 *sum_loop(F_1,F_2,True)
 
                             #4 (t^2) (k.x1)^2 (x1.x2)^2
                             l1=2;l2=2
                             F_1,F_2 = Fields_func(delta,ki,xi,x_norm,l1,l2)
-                            Pk_lm = sum_loop(Pk_lm,F_1,F_2,True)
+                            Pk_lm += 4*t**2 *sum_loop(F_1,F_2,True)
 
                             #-(t^2)(k1.x1)^2 (x2.x2)
                             F_1 = Qpqrs(delta/x_norm**4,xi,ki,2)#so this has the k term...
                             F_2 = FFTW_fft(delta*x_norm**2)
-                            Pk_lm = sum_loop(Pk_lm,F_1,F_2)
+                            Pk_lm += -t**2 *sum_loop(F_1,F_2)
                           
                 return Pk_lm
 
@@ -318,10 +316,20 @@ class Pk:
                 power_bin = np.sum(power_k[In_bin[i]])
                 Pk[i] = const*power_bin/N_modes[i]
             return (2*l+1)*Pk
+
+        #if even then calculate monopole    
+        if l % 2 == 0:
+            # just calculate the monopole - it useful
+            Pk_mono = Pk_endpoint(delta,k,0)
+            self.mono = Pk_mono
+            self.pk = Pk_mono
+            if l != 0:
+                self.pk = Pk_main(delta,k,l)
         
-        Pk_mono = Pk_endpoint(delta,k,0)
-        self.mono = Pk_mono
-        self.pk = Pk_main(delta,k,l)
+        else:
+            # this is to pick which estimator function to call! - based on LOS and l
+            #self.mono = 0
+            self.pk = Pk_main(delta,k,l)
                     
                 
          
