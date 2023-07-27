@@ -155,21 +155,20 @@ class Pk:
             global FFT_number
             FFT_number = 0
 
-            delta_k = FFTW_fft(delta) #no longer in get values
-            
             Nbins = len(k_)
 
             def main_func(l):
+                """does main calculation for powerspectrum multipoles with different LOS"""
                 if l == 0:
                     return Pk_mono
+                
+                #get the two fields G_l etc - for second field k2 = -k1 which we are expanding around    
+                F_1 = Qpqrs(delta/(x_norm**l),xi,ki,l)
+                F_2 = FFTW_fft(delta)  
+                Pk_lm = sum_loop(F_1,F_2)
 
-                if l==1:
-                    #get the two fields Q_m and Q_n etc - for second field k2 = -k1 which we are expanding around    
-                    F_1 = Qpqrs(delta/x_norm,xi,ki,1)
-                    F_2 = FFTW_fft(delta)  #(-1)**(f123[1]) is there as we have negative k for second field
-                    Pk_lm = sum_loop(F_1,F_2)
-                    
-                    if t > 0:
+                if t > 0:
+                    if l==1:
                         if ex_order ==1:
                             #t k.x2/x1
                             F_1 = FFTW_fft(delta/x_norm)#Qpqrs(delta,norm,ki,1)
@@ -208,13 +207,7 @@ class Pk:
                             F_2 = FFTW_fft(delta*x_norm**2)
                             Pk_lm += -(1/2) *(t**2)*sum_loop(F_1,F_2)
                                           
-                if l==2:
-                    #get the two fields Q_m and Q_n etc - for second field k2 = -k1 which we are expanding around    
-                    F_1 = Qpqrs(delta/(x_norm**2),xi,ki,2)
-                    F_2 = FFTW_fft(delta)  
-                    Pk_lm = sum_loop(F_1,F_2)
-                        
-                    if t > 0:
+                    if l==2:                   
                         if ex_order ==1:
                             #2t (k.x1)(k.x2)/x1
                             F_1 = Qpqrs(delta/(x_norm**2),xi,ki,1)

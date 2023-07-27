@@ -354,16 +354,16 @@ class Bk:
             def main_func(l):
                 if l == 0:
                     return self.mono
+                
+                #For all multipoles - first the x1 endpoint
+                kQl = Qpqrs(delta/(x_norm)**l,xi,ki,l) 
+                ifft_Gl = ifft_field(kQl) # ifft
+                ifft_F = ifft_field(delta_k)
+
+                # for: (k1.x1)^l
+                Bk_lm = ifft_sum(ifft_G1_1,ifft_F,ifft_F)
 
                 if l==1:
-                    
-                    #set up the first fields
-                    kQ1 = Qpqrs(delta/x_norm,xi,ki,1) 
-                    ifft_G1_1 = ifft_field(kQ1) # ifft
-                    ifft_F = ifft_field(delta_k)
-                    
-                    # for: k1.x1
-                    Bk_lm = ifft_sum(ifft_G1_1,ifft_F,ifft_F)
                     
                     # ok so now consider if we outside d = x1
                     if exorder == 'mid': # so here we compute the other endpoints as it were...
