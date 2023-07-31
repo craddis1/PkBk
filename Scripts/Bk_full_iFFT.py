@@ -361,30 +361,31 @@ class Bk:
                 ifft_F = ifft_field(delta_k)
 
                 # for: (k1.x1)^l
-                Bk_lm = ifft_sum(ifft_G1_1,ifft_F,ifft_F)
+                Bk_lm = ifft_sum(ifft_Gl,ifft_F,ifft_F)
+                
+                # ok so now consider if we outside d = x1
+                if exorder == 'mid': # so here we compute the other endpoints as it were...
+                    #using the x1 + x2 + x3 = 3d
 
+                    Bk_lm1 = np.zeros((3,N_bins,N_bins,N_bins),dtype=dtype_r) # I want 3 results from this as the other 2 endpoints are useful to have...
+                    Bk_lm1[0] = Bk_lm
+
+                    kF_k1,Q_ij_x = Qpqrs2(delta/(x_norm)**l,delta_k,xi,ki,l)
+
+                    ifft_kF = ifft_field(kF_k1,False)
+                    ifft_Ql_x = ifft_field(Q_ij_x,False)
+
+                    #k.x2    
+                    Bk_lm1[1] = ifft_sum1(ifft_kF,ifft_Ql_x,ifft_F)
+
+                    #k.x3   
+                    Bk_lm1[2] = ifft_sum2(ifft_kF,ifft_F,ifft_Ql_x)
+
+                    Bk_lm = Bk_lm1
+                
+                #now for multipoles...
                 if l==1:
-                    
-                    # ok so now consider if we outside d = x1
-                    if exorder == 'mid': # so here we compute the other endpoints as it were...
-                        #using the x1 + x2 + x3 = 3d
-                        
-                        Bk_lm1 = np.zeros((3,N_bins,N_bins,N_bins),dtype=dtype_r) # I want 3 results from this as the other 2 endpoints are useful to have...
-                        Bk_lm1[0] = Bk_lm
-                        
-                        kF_k1,Q_ij_x = Qpqrs2(delta/x_norm,delta_k,xi,ki,1)
-                        
-                        ifft_kF = ifft_field(kF_k1,False)
-                        ifft_Q1_x = ifft_field(Q_ij_x,False)
-
-                        #k.x2    
-                        Bk_lm1[1] = ifft_sum1(ifft_kF,ifft_Q1_x,ifft_F)
-                        
-                        #k.x3   
-                        Bk_lm1[2] = ifft_sum2(ifft_kF,ifft_F,ifft_Q1_x)
-                        
-                        Bk_lm = Bk_lm1
-                           
+                    #only this multipole implemented so far in expansion of x1
                     if exorder == 1:
                         r,s = rs #unpack r and s 
                         #this stuff is used in both r and s parts...
