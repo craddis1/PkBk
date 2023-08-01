@@ -217,7 +217,6 @@ class Bk:
             #compute sum 
             Bbin_lm = ifft_sum(ifft_del1,ifft_del,ifft_del)
             if verbose: print('Number of FFTs used=',FFT_number,'Number of iFFTs used=',iFFT_number)
-            print("literrally at the end")
             return (2*l+1)*const*Bbin_lm/Ntri
         
         def ifft_field(field,single_field=True):#lets edit this...
