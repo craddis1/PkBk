@@ -14,7 +14,6 @@ need iFFTs
 from numba import jit, complex64, complex128,prange
 
 import numpy as np
-from numba import jit
 import sys
 sys.path.append('Library')
 
@@ -121,13 +120,12 @@ def ifft_sum(field1: complex64[:, :], field2: complex64[:, :], field3: complex64
 
     return Bk_lm
 
-
 #separate func just for binning info -
 #theta binning scheme
 #find the modes in bins for k1 k2 and k3 and then computes the number of closed triangles using iFFTs.
 #@jit(nopython=True)
 def bk_full_compute_bins(ks,N_side,s,k_mag,k_f,dtype=np.complex64,threads=1,rfft=False): #computes binning information for power spectrum #this is dependent on compute grid info
-        #raise warning if bad dtype
+    #raise warning if bad dtype
     if dtype != np.complex128 and dtype != np.complex64:
         raise Exception("Invalid dtype")
 
@@ -153,7 +151,7 @@ def bk_full_compute_bins(ks,N_side,s,k_mag,k_f,dtype=np.complex64,threads=1,rfft
     def FFTW_ifft(delta):
         #global iFFT_number
         #iFFT_number += 1
-        return iFFT_(delta,threads)
+        return iFFT_(delta,1)
 
     N_bins = len(ks)
     #set our number of bins for k3 from theta

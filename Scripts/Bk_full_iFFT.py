@@ -199,13 +199,13 @@ class Bk:
 
             if verbose: print('nyquist frequency=',k_ny,'fundamental frequency=',k_f)
             delta_k = FFTW_fft(delta)
-            
+
             #constants - e.g. see watkinson
             Npix = N_side**3
             V = L**3
             H = V/Npix
             const = H**3 *(1/V)
-            
+
             ifft_del = ifft_field(delta_k)
             if l != 0:
                 #calulate delta_lm - this needs to be done once for each harmonic
@@ -213,10 +213,11 @@ class Bk:
                 ifft_del1 = ifft_field(F_lm)
             else:
                 ifft_del1 = ifft_del
-
+       
             #compute sum 
             Bbin_lm = ifft_sum(ifft_del1,ifft_del,ifft_del)
             if verbose: print('Number of FFTs used=',FFT_number,'Number of iFFTs used=',iFFT_number)
+            print("literrally at the end")
             return (2*l+1)*const*Bbin_lm/Ntri
         
         def ifft_field(field,single_field=True):#lets edit this...
@@ -285,7 +286,7 @@ class Bk:
         @jit(nopython=True,parallel=True,fastmath=fastmath)
         def ifft_mixed_sum(field1,field2,field3): # does sum over fields where there are possible closed triangles...
             Bk_lm = np.zeros((N_bins,N_bins,N_bins),dtype=dtype_r)
-            for i in range(N_bins):
+            for i in prange(N_bins):
                 for j in range(N_bins):
                     for k in range(N_bins):
                         if (i > j+k+1) or ((j > i+k+1)or (k > i+j+1)):#these values should all be 0 as dirac delta
@@ -303,7 +304,7 @@ class Bk:
         @jit(nopython=True,parallel=True,fastmath=fastmath)
         def ifft_mixed_sum1(field1,field2,field3): # does sum over fields where there are possible closed triangles...
             Bk_lm = np.zeros((N_bins,N_bins,N_bins),dtype=dtype_r)
-            for i in range(N_bins):
+            for i in prange(N_bins):
                 for j in range(N_bins):
                     for k in range(N_bins):
                         if (i > j+k+1) or ((j > i+k+1)or (k > i+j+1)):#these values should all be 0 as dirac delta
@@ -362,7 +363,6 @@ class Bk:
 
                 # for: (k1.x1)^l
                 Bk_lm = ifft_sum(ifft_Gl,ifft_F,ifft_F)
-                
                 # ok so now consider if we outside d = x1
                 if exorder == 'mid': # so here we compute the other endpoints as it were...
                     #using the x1 + x2 + x3 = 3d
@@ -491,7 +491,7 @@ class Bk:
                         ifft_GQQ_x5 = bf.reshape69(ifft_G1Q2_x5,True).reshape((N_bins,3,3,N_side**3))
                         
                         Bk_lm1[14] = 3*r*s *ifft_mixed_sum(ifft_GQQ_x5,ifft_Q1,ifft_Q1)
-                            
+                                            
                 return  const/Ntri*Bk_lm
 
 
