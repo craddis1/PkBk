@@ -29,7 +29,7 @@ To obtain additional information about interpolating a box
 Multiprocessing
 ---------------
 
-Can be added on the frontend for computing spectra over many realisations. However I've found there can be some incompatibility (e.g. see `Link text https://github.com/pyFFTW/pyFFTW/issues/135`_) between the multithreading enabled in pyfftw and numba (bispectrum only) so would be advisable to disable that first!
+Can be added on the frontend for computing spectra over many realisations. However I've found there can be some incompatibility (e.g. see `Link text <https://github.com/pyFFTW/pyFFTW/issues/135>`_) between the multithreading enabled in pyfftw and numba (bispectrum only) so would be advisable to disable that first!
 
 
 
