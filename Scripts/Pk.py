@@ -133,7 +133,7 @@ class Pk:
         
         # equivalent of power_bin = const*np.sum(power_k[np.newaxis, ...] * In_bin, axis=(1,2,3))/N_modes
         def sum_loop(F_1,F_2,composite=False):
-            """Does sum loop over two fields - if composite = True then it does extra loop over them fields"""
+            """Does sum loop over two fields - if composite = True: then it does extra loop over them fields"""
             power_k = F_1*MAS*np.conj(F_2*MAS)#is conjugate as F(-k) = F*(k)
             Pk_lm_empty = np.zeros(len(In_bin),dtype=dtype)
             if composite != True:
@@ -169,7 +169,7 @@ class Pk:
 
                 if t > 0:
                     if l==1:
-                        if ex_order ==1:
+                        if ex_order == 1:
                             #t k.x2/x1
                             F_1 = FFTW_fft(delta/x_norm)#Qpqrs(delta,norm,ki,1)
                             F_2 = Qpqrs(delta,xi,ki,1)#so this has the k term...
@@ -193,7 +193,7 @@ class Pk:
                             Pk_lm += -(t**2+t)*sum_loop(F_1,F_2,True)#ok F_1 and F_2 have shape (3,(field))
                              
                             
-                            #-(t^2)(k1.x2)(x1.x2)
+                            #-(t^2)(k1.x2)(x1.x2) #!!!! isn't this superflous 
                             F_2,F_1 = Fields_func(delta,ki,xi,x_norm,1,1,2) # when field =2 then F_2 and F_1 switch
                             Pk_lm += -(t**2)*sum_loop(F_1,F_2,True)#ok F_1 and F_2 have shape (3,(field)) 
                             
@@ -203,7 +203,7 @@ class Pk:
                             Pk_lm += (3/2) *(t**2)*sum_loop(F_1,F_2,True)#ok F_1 and F_2 have shape (6,(field))
                                             
                             #-1/2 (t^2)(k1.x1)(x2.x2)
-                            F_1 = Qpqrs(delta,xi/x_norm**3,ki,1)#so this has the k term...
+                            F_1 = Qpqrs(delta/x_norm**3,xi,ki,1)#so this has the k term...
                             F_2 = FFTW_fft(delta*x_norm**2)
                             Pk_lm += -(1/2) *(t**2)*sum_loop(F_1,F_2)
                                           

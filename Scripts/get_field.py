@@ -13,6 +13,7 @@ import Pk_library as PKL
 from numba import jit
 import readgadget
 import MAS_library as MASL
+import redshift_space_library as RSL
 
 def load_field_pylians(path,file,N_side,rsd = 'no',obs_pos=[0,0,0],verbose=True):
     # input files   # so we enter the Quijote folder and access which initialization
@@ -88,7 +89,49 @@ def load_field_pylians(path,file,N_side,rsd = 'no',obs_pos=[0,0,0],verbose=True)
     delta /= np.mean(delta, dtype=np.float64);  delta -= 1.0
     return delta
 
-def load_field_pylians_pp(path,file,N_side,rsd = 'no',verbose=True): #plane-parallel limit version
+
+def load_field_pylians_PP(path,file,N_side,rsd = 'no',obs_pos=[0,0,0],verbose=True):
+    # input files   # so we enter the Quijote folder and access which initialization
+    snapshot = path + file  #10000/snapdir_004/snap_004
+    ptype    = [1] #[1](CDM), [2](neutrinos) or [1,2](CDM+neutrinos)
+
+    # read header
+    header   = readgadget.header(snapshot)
+    BoxSize  = header.boxsize/1e3  #Mpc/h
+    Nall     = header.nall         #Total number of particles
+    Masses   = header.massarr*1e10 #Masses of the particles in Msun/h
+    Omega_m  = header.omega_m      #value of Omega_m
+    Omega_l  = header.omega_l      #value of Omega_l
+    h        = header.hubble       #value of h
+    redshift = header.redshift     #redshift of the snapshot
+    Hubble   = 100.0*np.sqrt(Omega_m*(1.0+redshift)**3+Omega_l)#*(1/(1+redshift))#Value of  H(z) in km/s/(Mpc/h)
+
+    # read positions, velocities and IDs of the particles
+    pos = readgadget.read_block(snapshot, "POS ", ptype)/1e3 #positions in Mpc/h
+    vel = readgadget.read_block(snapshot, "VEL ", ptype)     #peculiar velocities in km/s
+    ids = readgadget.read_block(snapshot, "ID  ", ptype)-1   #IDs starting from 0
+    
+    axis=2
+    RSL.pos_redshift_space(pos, vel, BoxSize, Hubble, redshift, axis)
+    
+    # density field parameters
+    grid    = N_side    #the 3D field will have grid x grid x grid voxels
+    BoxSize = 1000.0 #Mpc/h ; size of box
+    MAS     = 'CIC'  #mass-assigment scheme
+    #verbose = True   #print information on progress
+
+    # define 3D density field
+    delta = np.zeros((grid,grid,grid), dtype=np.float32)
+
+    # construct 3D density field
+    MASL.MA(pos, delta, BoxSize, MAS, verbose=verbose)
+
+    # at this point, delta contains the effective number of particles in each voxel
+    # now compute overdensity and density constrast
+    delta /= np.mean(delta, dtype=np.float64);  delta -= 1.0
+    return delta
+
+def load_field_pylians_pp1(path,file,N_side,rsd = 'no',verbose=True): #plane-parallel limit version
     # input files   # so we enter the Quijote folder and access which initialization
     snapshot = path + file  #10000/snapdir_004/snap_004
     ptype    = [1] #[1](CDM), [2](neutrinos) or [1,2](CDM+neutrinos)
