@@ -89,6 +89,103 @@ def load_field_pylians(path,file,N_side,rsd = 'no',obs_pos=[0,0,0],verbose=True)
     delta /= np.mean(delta, dtype=np.float64);  delta -= 1.0
     return delta
 
+def load_augment_field_pylians(path,file,L,N_side,rsd = 'no',obs_pos=[1500,1500,1500],verbose=True):
+    # input files   # so we enter the Quijote folder and access which initialization
+    snapshot = path + file  #10000/snapdir_004/snap_004
+    ptype    = [1] #[1](CDM), [2](neutrinos) or [1,2](CDM+neutrinos)
+
+    # read header
+    header   = readgadget.header(snapshot)
+    BoxSize  = header.boxsize/1e3  #Mpc/h
+    Nall     = header.nall         #Total number of particles
+    Masses   = header.massarr*1e10 #Masses of the particles in Msun/h
+    Omega_m  = header.omega_m      #value of Omega_m
+    Omega_l  = header.omega_l      #value of Omega_l
+    h        = header.hubble       #value of h
+    redshift = header.redshift     #redshift of the snapshot
+    Hubble   = 100.0*np.sqrt(Omega_m*(1.0+redshift)**3+Omega_l)*(1/(1+redshift))#Value of (conformal) H(z) in km/s/(Mpc/h)
+
+    # read positions, velocities and IDs of the particles
+    pos = readgadget.read_block(snapshot, "POS ", ptype)/1e3 #positions in Mpc/h
+    vel = readgadget.read_block(snapshot, "VEL ", ptype)     #peculiar velocities in km/s
+    #ids = readgadget.read_block(snapshot, "ID  ", ptype)-1   #IDs starting from 0
+    
+    
+    """Create 27 cube megacube"""
+    #but first lets down sample
+    in_bool = np.where(np.random.random(len(pos))>0.965)
+    pos_sample = pos[in_bool]
+    vel_sample = vel[in_bool]
+    extra_boxes = np.zeros((27,*pos_sample.T.shape),dtype=np.float32) #create empty array
+
+    for i in range(3): #do nested loop to create 27 translated identical boxes...
+        for j in range(3):
+            for k in range(3):
+                extra_boxes[9*i+3*j+k][0] = pos_sample.T[0] + i*BoxSize
+                extra_boxes[9*i+3*j+k][1] = pos_sample.T[1] + j*BoxSize
+                extra_boxes[9*i+3*j+k][2] = pos_sample.T[2] + k*BoxSize
+
+    vel_tmp = np.repeat(vel_sample[np.newaxis,::],27,axis=0)#need vel in same shape as pos
+    new_pos = np.zeros((extra_boxes.shape[2]*27,3),dtype=np.float32)#so now we get it in to right format
+    new_vel = np.zeros((extra_boxes.shape[2]*27,3),dtype=np.float32)#so now we get it in to right format
+    for i in range(3):
+        new_pos[:,i] = extra_boxes[:,i,:].flatten()
+        new_vel[:,i] = vel_tmp[:,:,i].flatten()
+
+    #this is for adding a artificial RSD
+    #make periodic grid again
+    def make_periodic(x,L):
+        tmp = np.where((x>L)|(x<0.0))
+        x[tmp] = (x[tmp]+L)%L
+        return x
+   
+    @jit(nopython=True)# CHECK speed up...
+    def add_RSD(pos,vel,obs_pos):
+        #this is for adding a artificial RSD
+        #make periodic grid again
+        def make_periodic(x,L):
+            tmp = np.where((x>L)|(x<0.0))
+            x[tmp] = (x[tmp]+L)%L
+            return x
+        
+        pos1 = np.zeros_like(pos) #these will be the the position of particles from observer
+        #need to normalise
+        pos1[0] = pos[0] - obs_pos[0];pos1[1] = pos[1] - obs_pos[1];pos1[2] = pos[2] - obs_pos[2]
+        conf_norm = np.sqrt(pos1[0]**2 + pos1[1]**2 + pos1[2]**2) # make a unit vector - normalise
+        #avoid zero errors:
+        conf_norm = np.where(conf_norm==0,1,conf_norm) # where conf_norm is 0, - so is x,y,z!!!
+        x_hat= pos1[0]/conf_norm;y_hat= pos1[1]/conf_norm;z_hat= pos1[2]/conf_norm
+
+        v_dot_x = vel[0]*x_hat + vel[1]*y_hat + vel[2]*z_hat  #get v . x hat
+        z_rsd = make_periodic(pos[2] + (v_dot_x*z_hat/(Hubble)),BoxSize)#*h    *a is included, this conformal
+        y_rsd = make_periodic(pos[1] + (v_dot_x*y_hat/(Hubble)),BoxSize)#*h
+        x_rsd = make_periodic(pos[0] + (v_dot_x*x_hat/(Hubble)),BoxSize)#*h
+        return x_rsd,y_rsd,z_rsd
+
+    if rsd != 'no':#if RSD are added or not!!!
+        x,y,z = new_pos.T      # get positions in Mpc/h
+        vx,vy,vz = new_vel.T   # get velocities in km/s
+        x,y,z = add_RSD(new_pos.T,new_vel.T,np.array(obs_pos))
+        pos = np.array([x,y,z],dtype=np.float32).T
+
+    # density field parameters
+    grid    = N_side    #the 3D field will have grid x grid x grid voxels
+    BoxSize = L #Mpc/h ; size of box
+    MAS     = 'CIC'  #mass-assigment scheme
+    #verbose = True   #print information on progress
+
+    # define 3D density field
+    delta = np.zeros((grid,grid,grid), dtype=np.float32)
+
+    # construct 3D density field
+    MASL.MA(pos, delta, BoxSize, MAS, verbose=verbose)
+
+    # at this point, delta contains the effective number of particles in each voxel
+    # now compute overdensity and density constrast
+    delta /= np.mean(delta, dtype=np.float64);  delta -= 1.0
+    return delta
+
+
 
 def load_field_pylians_PP(path,file,N_side,rsd = 'no',obs_pos=[0,0,0],verbose=True):
     # input files   # so we enter the Quijote folder and access which initialization

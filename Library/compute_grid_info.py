@@ -43,8 +43,8 @@ def MAS_corr_field(k,k_r,k_ny,order): #correction for cic
 #creates LoS to convolve with the field for Qpqrs - gets n_hat direction of LOS vector
 @jit(nopython=True) #njitted version with custom meshgrid!!! ~10-20% quicker from NUMBA
 def LoS(Nside,L,obs_pos):
-    conf_space = np.linspace(0,L,Nside)
-    x , y , z = meshgrid(conf_space-obs_pos[0], conf_space-obs_pos[1], conf_space-obs_pos[2]) 
+    conf_space = np.linspace(0,L,Nside)  #CHANGE - default is to define coordinates from the box centre
+    x , y , z = meshgrid(conf_space- L/2-obs_pos[0], conf_space- L/2-obs_pos[1], conf_space- L/2-obs_pos[2]) 
     conf_norm = np.sqrt(x**2 + y**2 + z**2) # make a unit vector - normalise
     
     #avoid zero errors:
@@ -151,7 +151,7 @@ def bk_full_compute_bins(ks,N_side,s,k_mag,k_f,dtype=np.complex64,threads=1,rfft
     def FFTW_ifft(delta):
         #global iFFT_number
         #iFFT_number += 1
-        return iFFT_(delta,1)
+        return iFFT_(delta,threads)
 
     N_bins = len(ks)
     #set our number of bins for k3 from theta
