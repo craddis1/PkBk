@@ -61,7 +61,7 @@ class Pk:
             iFFT_number += 1
             return iFFT_(delta,threads)
         
-                #Caluclate Q_ij etc and sums over to get G - without summing Qpqrs2 (i.e.  requires a lot more memory...
+        #Caluclate Q_ij etc and sums over to get G - without summing Qpqrs2 (i.e.  requires a lot more memory...
         #so this is for the q1.r1 parts
         def Qpqrs(delta,xi,ki,l): # extends
             if l == 0:
@@ -253,7 +253,7 @@ class Pk:
 
             def Pk_legendre(l):
                 if l == 0:
-                    return main_func(0)
+                    return self.mono #main_func(0)
                 if l == 1:
                     return main_func(1)
                 if l == 2:

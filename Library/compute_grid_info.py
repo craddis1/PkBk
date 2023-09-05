@@ -48,7 +48,7 @@ def LoS(Nside,L,obs_pos):
     conf_norm = np.sqrt(x**2 + y**2 + z**2) # make a unit vector - normalise
     
     #avoid zero errors:
-    conf_norm = np.where(conf_norm==0,1e-10,conf_norm)                     #where conf_norm is 0, - so is x,y,z!!!
+    conf_norm = np.where(conf_norm==0,1,conf_norm) #where conf_norm is 0, - so is x,y,z!!!
     xi = np.empty((3,Nside,Nside,Nside))
     xi[0]=x;xi[1]=y;xi[2]=z               #i.e x1
     return xi,conf_norm
