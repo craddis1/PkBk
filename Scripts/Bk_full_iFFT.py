@@ -517,9 +517,9 @@ class Bk:
             # just calculate the monopole - it useful
             self.mono =  Bk_endpoint_full(delta,0)
             if l != 0:
-                self.bk = Bk_full(delta,l) 
+                self.bk = Bk_endpoint_full(delta,l)
         
         else:
             # this is to pick which estimator function to call! - based on LOS and l
             #self.mono = 0
-            self.bk = Bk_full(delta,l)
+            self.bk = Bk_endpoint_full(delta,l)
