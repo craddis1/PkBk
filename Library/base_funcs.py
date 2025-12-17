@@ -2,6 +2,8 @@
 from numba import jit
 #this is just some functions which are throughout main class - but are relativaley mundane but useful and so are put here to neaten things up a little and clear some space - maybe a few more will be migrated.
 import numpy as np
+import math 
+
 LOOKUP_TABLE = np.array([
     1, 1, 2, 6, 24, 120, 720, 5040, 40320,
     362880, 3628800, 39916800, 479001600,
@@ -55,8 +57,8 @@ def count_distinct_permutations(comb): #counts the distinct permuations (n1+n2+.
     y = np.array(x[x != 0]) #get rid of integers that dont appear
     dem = 1
     for i in range(len(y)):
-        dem *= np.math.factorial(y[i]) 
-    return np.math.factorial(len(comb))/(dem)
+        dem *= math.factorial(y[i]) 
+    return math.factorial(len(comb))/(dem)
 
 #returns triangle numbers - which is how many terms there are for each multipole (or at least to whcih order)
 def Num_terms(l):

@@ -312,8 +312,7 @@ def just_load(path,file):    #useful for adding RSD manually    #can then just c
     return pos.T,vel.T      # get positions in Mpc/h,  # get velocities in km/s
     
     
-    
-def load_field(path,file,N_side,rsd = 'no'):
+def load_field(path,file,N_side,obs_pos=[0,0,0],rsd = 'no'):
     # input files   # so we enter the Quijote folder and access which initialization
     snapshot = path + file  #10000/snapdir_004/snap_004
     ptype    = [1] #[1](CDM), [2](neutrinos) or [1,2](CDM+neutrinos)

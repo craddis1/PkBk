@@ -9,8 +9,8 @@ def FFTW_ifft_single(delta,threads=1):
     global iFFT_number
     iFFT_number += 1
     Nside = len(delta)
-    in_array = pyfftw.empty_aligned((Nside,Nside,Nside), dtype=np.complex64)
-    out_array = pyfftw.empty_aligned((Nside,Nside,Nside), dtype=np.complex64)
+    in_array = np.zeros((Nside,Nside,Nside), dtype=np.complex64)
+    out_array = np.zeros((Nside,Nside,Nside), dtype=np.complex64)
     fftw_obj = pyfftw.FFTW(in_array,out_array,axes=(0,1,2),flags=("FFTW_ESTIMATE", ),direction='FFTW_BACKWARD',threads=threads)
     in_array[:] = delta
     return fftw_obj(delta)#np.fft.ifftn(delta)
@@ -20,8 +20,8 @@ def FFTW_fft_single(delta,threads=1):
     global FFT_number
     FFT_number += 1
     Nside = len(delta)
-    in_array = pyfftw.empty_aligned((Nside,Nside,Nside), dtype=np.complex64)
-    out_array = pyfftw.empty_aligned((Nside,Nside,Nside), dtype=np.complex64)
+    in_array = np.zeros((Nside,Nside,Nside), dtype=np.complex64)
+    out_array = np.zeros((Nside,Nside,Nside), dtype=np.complex64)
     #print("size:", round(out_array.nbytes / 1000 / 1000), "MB")
     fft_obj=pyfftw.FFTW(in_array,out_array,axes=(0,1,2),flags=("FFTW_ESTIMATE", ),threads=threads)
     in_array[:] = delta
