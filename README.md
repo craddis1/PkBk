@@ -1,4 +1,4 @@
-# PkBk
+# FFT implementation of the Yamamoto and Soccimarro estimators
 
 Computes Power Spectrum and Bispectrum multipoles using FFTs allowing for option of different Line-of-sights (LOS).
 
